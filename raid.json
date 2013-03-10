@@ -1,0 +1,19 @@
+{
+	"disks": [
+	{
+		"id":"D1",
+		"blockCount":5
+	},
+	{
+		"id":"D2",
+		"blockCount":5
+	}
+	],
+	"controllers": [
+	{
+		"id":"C1",
+		"type":"R1",
+		"disks":["D1","D2"]
+	}
+	]
+}
