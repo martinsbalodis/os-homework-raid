@@ -67,8 +67,8 @@ R.prototype = {
 				.attr("x2", function(d) { return d.target.x; })
 				.attr("y2", function(d) { return d.target.y; });
 
-			me.d3Disks.attr("cx", function(d) { return d.x; })
-				.attr("cy", function(d) { return d.y; });
+			me.d3Disks.attr("x", function(d) { return d.x; })
+				.attr("y", function(d) { return d.y-10; });
 			});
 			
 	},
@@ -76,12 +76,11 @@ R.prototype = {
 		
 		this.d3Disks = this.svg.selectAll(".disk")
 			.data(this.disks)
-			.enter().append("circle")
+			.enter().append("rect")
 			.attr("class", "disk")
-			.attr("r", 20)
-			.style("fill", function(d) {
-				return color(d.id);
-			});
+			.attr("height", 20)
+			.attr("width", function(d) { return d.getBlockCount()*20; })
+			.style("fill", function(d) { return color(d.id); });
 		
 		this.d3Connections = this.svg.selectAll(".link")
 			.data(this.connections)
@@ -94,14 +93,14 @@ R.prototype = {
 window.Disk = function(data) {
 	this.id = data.id;
 	this.blockCount = data.blockCount;
-	
-	// d3.force
-	this.weight = 1;
 };
 
 window.Disk.prototype = {
 	isRaid: function() {
 		return false;
+	},
+	getBlockCount: function() {
+		return this.blockCount;
 	}
 };
 
@@ -109,9 +108,8 @@ window.Raid = function(data) {
 	this.type = data.type
 	this.id = data.id;
 	this.disks = data.disks;
-	
-	// d3.force
-	this.weight = 1;
+	this.loadRaid();
+	this.init();
 }
 
 window.Raid.prototype = {
@@ -125,6 +123,38 @@ window.Raid.prototype = {
 			disks.push(diskHash[this.disks[i]]);
 		}
 		this.disks = disks;
+	},
+	init:function(){
+		
+	},
+	getBlockCount: function() {
+		return this.blockCount;
+	},
+	// loads raid function stack
+	loadRaid: function(){
+		switch(this.type) {
+			case 'R1':
+				var functions = Raid1;
+				break;
+		}
+		for(var fn in functions) {
+			this[fn] = functions[fn];
+		}
+	}
+};
+
+Raid1 = {
+	init:function() {
+		Raid.prototype.init.call(this);
+	},
+	getBlockCount: function() {
+		this.blockCount = this.disks[0].blockCount;
+		for(var i in this.disks) {
+			if(this.blockCount > this.disks[i].blockCount) {
+				this.blockCount = this.disks[i].blockCount;
+			}
+		}
+		return this.blockCount;
 	}
 };
 
