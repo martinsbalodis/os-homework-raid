@@ -19,8 +19,22 @@
 			d3.json("raid.json", function(error, graph) {
 				var r = new R(graph);
 				r.drawTo(d3.select("body"), 960, 500);
+				
+				var mainController = r.getDisk('C1');
+				
+//				mainController.write('B');
+//				mainController.write('C');
+
+				document.getElementById('write').onclick = function(){
+					mainController.write('A');
+					return false;
+				}
+				
 			});
 		</script>
 	</head>
-	<body></body>
+	<body>
+		<input type="text">
+		<button id="write">Rakstīt</button>
+	</body>
 </html>

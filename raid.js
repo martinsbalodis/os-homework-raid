@@ -7,6 +7,7 @@ window.R = function(data){
 	// init disks
 	for(var i in data.disks) {
 		var disk = new Disk(data.disks[i]);
+		disk.container = this;
 		this.disks.push(disk);
 		this.diskHash[disk.id] = disk;
 	}
@@ -14,6 +15,7 @@ window.R = function(data){
 	// init raid controllers
 	for(i in data.controllers) {
 		var raid = new Raid(data.controllers[i]);
+		raid.container = this;
 		this.disks.push(raid);
 		this.diskHash[raid.id] = raid;
 		raid.initDisks(this.diskHash);
@@ -30,6 +32,7 @@ window.R = function(data){
 				source: raid,
 				target: disk
 			});
+			disk.parentConnection = connection;
 			this.connections.push(connection);
 		}
 	}
@@ -53,7 +56,7 @@ R.prototype = {
 		
 		this.force = d3.layout.force()
 			.charge(-120)
-			.linkDistance(60)
+			.linkDistance(150)
 			.size([this.width, this.height]);
 		
 		this.force
@@ -74,6 +77,11 @@ R.prototype = {
 	},
 	draw: function() {
 		
+//		for(var i in this.disks) {
+//			var disk = this.disks[i];
+//			disk.draw();
+//		}
+		
 		this.d3Disks = this.svg.selectAll(".disk")
 			.data(this.disks)
 			.enter().append("rect")
@@ -81,12 +89,19 @@ R.prototype = {
 			.attr("height", 20)
 			.attr("width", function(d) { return d.getBlockCount()*20; })
 			.style("fill", function(d) { return color(d.id); });
-		
+		console.log
 		this.d3Connections = this.svg.selectAll(".link")
 			.data(this.connections)
 			.enter().append("line")
 			.attr("class", "link")
 			.style("stroke-width", 1);
+	},
+	getDisk: function(id){
+		for(var i in this.disks) {
+			if(this.disks[i].id === id) {
+				return this.disks[i];
+			}
+		}
 	}
 };
 
@@ -101,6 +116,17 @@ window.Disk.prototype = {
 	},
 	getBlockCount: function() {
 		return this.blockCount;
+	},
+	write: function(data){
+		console.log(data);
+	},
+	draw: function(){
+		this.el = this.container.svg.append("rect")
+			//.data(this)
+			.attr("class", "disk")
+			.attr("height", 20)
+			.attr("width", 5)
+			.style("fill", function() { return color(123); });
 	}
 };
 
@@ -140,7 +166,27 @@ window.Raid.prototype = {
 		for(var fn in functions) {
 			this[fn] = functions[fn];
 		}
-	}
+	},
+	// Animate writing data to disk
+	write: function(disk, data) {
+		var connection = disk.parentConnection;
+		var block = this.container.svg.append("rect")
+			.attr("x",connection.source.x)
+			.attr("y",connection.source.y)
+			.attr("width",15)
+			.attr("height",15);
+		
+		block.transition()
+			.attr({
+				x: connection.target.x,
+				y: connection.target.y
+			})
+			.duration(500)
+			.delay(100);
+		
+		disk.write(data);
+	},
+	draw: Disk.prototype.draw
 };
 
 Raid1 = {
@@ -155,6 +201,13 @@ Raid1 = {
 			}
 		}
 		return this.blockCount;
+	},
+	write: function(data) {
+		
+		for(var i in this.disks) {
+			var disk = this.disks[i];
+			Raid.prototype.write.call(this, disk, data);
+		}
 	}
 };
 
