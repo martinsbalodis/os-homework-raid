@@ -74,8 +74,9 @@ R.prototype = {
 				.attr("y2", function(d) { return d.target.y; });
 
 			me.d3Disks.attr("x", function(d) { return d.x; })
-				.attr("y", function(d) { return d.y-10; });
-			});
+				//.attr("y", function(d) { return d.y-10; });
+				.attr("transform", function(d) { return "translate("+d.x+","+d.y+")"; });
+		});
 			
 	},
 	draw: function() {
@@ -85,14 +86,31 @@ R.prototype = {
 //			disk.draw();
 //		}
 		
-		this.d3Disks = this.svg.selectAll(".disk")
+		this.d3Disks = this.svg.selectAll("g")
 			.data(this.disks)
-			.enter().append("rect")
-			.attr("class", "disk")
-			.attr("height", 20)
-			.attr("width", function(d) { return d.getBlockCount()*20; })
-			.style("fill", function(d) { return color(d.id); });
-		console.log
+			.enter().append("g")
+			.each(function(disk){
+				disk.elGroup = d3.select(this);
+				
+				disk.elGroup.append("rect")
+				.attr("class", "disk")
+				.attr("height", 20)
+				.attr("width", function(d) { return d.getBlockCount()*20; })
+				.style("fill", function(d) { return color(d.id); })
+				
+				disk.elGroup.append('text')
+				.attr('fill', 'black')
+				.attr('x', '0')
+				.attr('y', '15');
+				
+			});
+//		this.svg.append('text')
+//				.text('ASDASDSaaaaaaaaaaaaaAD')
+//				.attr('fill', 'red')
+//				.attr('x', '0')
+//				.attr('y', '15')
+		
+		
 		this.d3Connections = this.svg.selectAll(".link")
 			.data(this.connections)
 			.enter().append("line")
@@ -111,6 +129,7 @@ R.prototype = {
 window.Disk = function(data) {
 	this.id = data.id;
 	this.blockCount = data.blockCount;
+	this.data = [];
 };
 
 window.Disk.prototype = {
@@ -120,8 +139,9 @@ window.Disk.prototype = {
 	getBlockCount: function() {
 		return this.blockCount;
 	},
-	write: function(data){
-		console.log(data);
+	write: function(data) {
+		this.data.push(data);
+		this.text(this.data.join(""));
 	},
 	draw: function(){
 		this.el = this.container.svg.append("rect")
@@ -130,6 +150,9 @@ window.Disk.prototype = {
 			.attr("height", 20)
 			.attr("width", 5)
 			.style("fill", function() { return color(123); });
+	},
+	text: function(text) {
+		this.elGroup.select('text').text(text);
 	}
 };
 

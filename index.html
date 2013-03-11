@@ -26,7 +26,8 @@
 //				mainController.write('C');
 
 				document.getElementById('write').onclick = function(){
-					mainController.write('A');
+					var value = document.getElementById('data').value;
+					mainController.write(value);
 					return false;
 				}
 				
@@ -34,7 +35,7 @@
 		</script>
 	</head>
 	<body>
-		<input type="text">
+		<input type="text" id="data" value="A" maxLength="1">
 		<button id="write">Rakstīt</button>
 	</body>
 </html>

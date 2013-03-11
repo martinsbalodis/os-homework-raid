@@ -1,9 +1,18 @@
-.node {
+.disk {
   stroke: #fff;
   stroke-width: 1.5px;
+  font-size:15;
+  color:#000;
 }
 
 .link {
   stroke: #999;
   stroke-opacity: .6;
 }
+
+/*text {
+	display:block;
+	font-size:10px;
+	text-anchor: middle;
+	fill:red
+}*/
