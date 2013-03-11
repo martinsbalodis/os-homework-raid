@@ -185,9 +185,11 @@ window.Raid.prototype = {
 				y: connection.target.y
 			})
 			.duration(500)
-			.delay(100);
-		
-		disk.write(data);
+			.delay(100)
+			.each("end", function() {
+				disk.write(data);
+				block.remove();
+			});
 	},
 	draw: Disk.prototype.draw
 };
