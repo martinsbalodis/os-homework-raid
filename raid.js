@@ -1,3 +1,6 @@
+/**
+ * Main container. Also known as a computer
+ */
 window.R = function(data){
 	this.data = data;
 	this.disks = [];
