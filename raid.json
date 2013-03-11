@@ -7,13 +7,26 @@
 	{
 		"id":"D2",
 		"blockCount":5
+	},
+	{
+		"id":"D3",
+		"blockCount":5
+	},
+	{
+		"id":"D4",
+		"blockCount":5
 	}
 	],
 	"controllers": [
 	{
 		"id":"C1",
 		"type":"R1",
-		"disks":["D1","D2"]
+		"disks":["D1","D2","D3"]
+	},
+	{
+		"id":"C2",
+		"type":"R1",
+		"disks":["D4","C1"]
 	}
 	]
 }
