@@ -6,36 +6,90 @@
 		<link href="style.css" rel="stylesheet" type="text/css">
 		<script src="http://d3js.org/d3.v3.min.js"></script>
 		<script src="raid.js"></script>
-		<script>
-//			var width = 960,
-//			height = 500;
-//			
-			var color = d3.scale.category20();
-			
-//			var svg = d3.select("body").append("svg")
-//			.attr("width", width)
-//			.attr("height", height);
-			
-			d3.json("raid.json", function(error, graph) {
-				var r = new R(graph);
-				r.drawTo(d3.select("body"), 960, 500);
-				
-				var mainController = r.getDisk('C2');
-				
-//				mainController.write('B');
-//				mainController.write('C');
-
-				document.getElementById('write').onclick = function(){
-					var value = document.getElementById('data').value;
-					mainController.write(value);
-					return false;
-				}
-				
-			});
-		</script>
 	</head>
 	<body>
 		<input type="text" id="data" value="A" maxLength="1">
 		<button id="write">Rakstīt</button>
 	</body>
 </html>
+<script>
+
+root = new Raid({
+	id:'RAID1',
+	type:'R1',
+	children:[
+		new Disk({
+			id:'disk1',
+			size:10
+		}),
+		new Disk({
+			id:'disk2',
+			size:10
+		}),
+		new Raid({
+			id:'RAID1',
+			type:'R1',
+			children:[
+				new Disk({
+					id:'disk3',
+					size:10
+				}),
+				new Disk({
+					id:'disk4',
+					size:10
+				}),
+
+			]
+		})
+	]
+});
+
+var width = 500,
+    height = 500;
+
+var cluster = d3.layout.cluster()
+    .size([height, width - 160]);
+
+var diagonal = d3.svg.diagonal()
+    .projection(function(d) { return [d.x, d.y]; });
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height)
+  .append("g")
+    .attr("transform", "translate(0,40)");
+
+var nodes = cluster.nodes(root),
+	links = cluster.links(nodes);
+
+var link = svg.selectAll(".link")
+	.data(links)
+  .enter().append("path")
+	.attr("class", "link")
+	.attr("d", diagonal);
+
+var node = svg.selectAll(".node")
+	.data(nodes)
+  .enter().append("g")
+	.attr("class", "node")
+	.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
+
+node.append("circle")
+	.attr("r", 4.5);
+
+node.append("text")
+	.attr("dx", function(d) { return d.children ? -8 : 8; })
+	.attr("dy", 3)
+	.style("text-anchor", function(d) { return d.children ? "end" : "start"; })
+	.text(function(d) { return d.id; });
+
+
+d3.select(self.frameElement).style("height", height + "px");
+
+document.getElementById('write').onclick = function(){
+	var value = document.getElementById('data').value;
+	root.write(value);
+	return false;
+}
+
+</script>

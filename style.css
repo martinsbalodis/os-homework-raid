@@ -1,18 +1,15 @@
-.disk {
-  stroke: #fff;
+.node circle {
+  fill: #fff;
+  stroke: steelblue;
   stroke-width: 1.5px;
-  font-size:15;
-  color:#000;
+}
+
+.node {
+  font: 10px sans-serif;
 }
 
 .link {
-  stroke: #999;
-  stroke-opacity: .6;
+  fill: none;
+  stroke: #ccc;
+  stroke-width: 1.5px;
 }
-
-/*text {
-	display:block;
-	font-size:10px;
-	text-anchor: middle;
-	fill:red
-}*/
