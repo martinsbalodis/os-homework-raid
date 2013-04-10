@@ -16,17 +16,29 @@
 		"id":"D4",
 		"blockCount":5
 	}
+	,{"id":"D4","blockCount":5}
+	,{"id":"D5","blockCount":5}
+	,{"id":"D6","blockCount":10}
+	,{"id":"D7","blockCount":12}
+	,{"id":"D8","blockCount":6}
+	,{"id":"D9","blockCount":7}
+	,{"id":"D10","blockCount":7}
 	],
 	"controllers": [
-	{
+	{"id":"C5","type":"R1","disks":["D7","D9"]}
+	,{"id":"C6","type":"R1","disks":["D8","D10"]}
+	,{"id":"C4","type":"R1","disks":["C5","C6"]}
+	
+	,{
 		"id":"C1",
 		"type":"R1",
-		"disks":["D1","D2","D3"]
+		"disks":["D1","D2","D3","C4"]
 	},
 	{
 		"id":"C2",
 		"type":"R1",
 		"disks":["D4","C1"]
 	}
+	
 	]
 }
