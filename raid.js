@@ -16,16 +16,8 @@ window.Disk.prototype = {
 		this.data.push(data);
 		this.text(this.data.join(""));
 	},
-	draw: function(){
-		this.el = this.container.svg.append("rect")
-			//.data(this)
-			.attr("class", "disk")
-			.attr("height", 20)
-			.attr("width", 5)
-			.style("fill", function() { return color(123); });
-	},
 	text: function(text) {
-//		this.elGroup.select('text').text(text);
+		d3.select(this.text_node).text(this.id+" ["+this.data.join("")+"]")
 	}
 };
 
@@ -70,7 +62,6 @@ window.Raid.prototype = {
 	write: function(disk, data) {
 		
 		var group = d3.select("svg>g");
-		console.log(svg);
 		
 		var block = group.append("rect")
 			.attr("x",this.x-8)
@@ -89,8 +80,7 @@ window.Raid.prototype = {
 				disk.write(data);
 				block.remove();
 			});
-	},
-	draw: Disk.prototype.draw
+	}
 };
 
 Raid1 = {
@@ -113,9 +103,4 @@ Raid1 = {
 			Raid.prototype.write.call(this, disk, data);
 		}
 	}
-};
-
-window.DiskConnection = function(data){
-	this.source = data.source;
-	this.target = data.target;
 };

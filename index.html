@@ -72,7 +72,10 @@ var node = svg.selectAll(".node")
 	.data(nodes)
   .enter().append("g")
 	.attr("class", "node")
-	.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
+	.attr("transform", function(d) { 
+		d.el = this;
+		return "translate(" + d.x + "," + d.y + ")"; 
+	});
 
 node.append("circle")
 	.attr("r", 4.5);
@@ -81,7 +84,10 @@ node.append("text")
 	.attr("dx", function(d) { return d.children ? -8 : 8; })
 	.attr("dy", 3)
 	.style("text-anchor", function(d) { return d.children ? "end" : "start"; })
-	.text(function(d) { return d.id; });
+	.text(function(d) { 
+		d.text_node = this;
+		return d.id; 
+	});
 
 
 d3.select(self.frameElement).style("height", height + "px");
