@@ -50,6 +50,9 @@ window.Raid.prototype = {
 	// loads raid function stack
 	loadRaid: function(){
 		switch(this.type) {
+			case 'R0':
+				var functions = Raid0;
+				break;
 			case 'R1':
 				var functions = Raid1;
 				break;
@@ -102,5 +105,24 @@ Raid1 = {
 			var disk = this.children[i];
 			Raid.prototype.write.call(this, disk, data);
 		}
+	}
+};
+
+Raid0 = {
+	init:function() {
+		Raid.prototype.init.call(this);
+		this.writeCounter=0;
+	},
+	getBlockCount: function() {
+		
+		return this.disks[0].blockCount * this.children.length;
+	},
+	write: function(data) {
+		
+		//determinate in which disk to do the writing
+		var disk_count = this.children.length;
+		var disk = this.children[this.writeCounter%disk_count]
+		Raid.prototype.write.call(this, disk, data);
+		this.writeCounter++;
 	}
 };
