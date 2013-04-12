@@ -18,6 +18,10 @@ window.Disk.prototype = {
 	},
 	text: function(text) {
 		d3.select(this.text_node).text(this.id+" ["+this.data.join("")+"]")
+	},
+	read: function(read_sector, callback) {
+		var sector_value = this.data[read_sector];
+		callback(sector_value);
 	}
 };
 
@@ -83,12 +87,39 @@ window.Raid.prototype = {
 				disk.write(data);
 				block.remove();
 			});
+	},
+	read: function(disk, read_sector, callback) {
+		
+		var me = this;
+		
+		disk.read(read_sector, function(data){
+			var group = d3.select("svg>g");
+		
+			var block = group.append("rect")
+				.attr("x",disk.x-8)
+				.attr("y",disk.y-8)
+				.attr("width",16)
+				.attr("height",16);
+
+			block.transition()
+			.attr({
+				x: me.x-8,
+				y: me.y-8
+			})
+			.duration(500)
+			.delay(100)
+			.each("end", function() {
+				block.remove();
+				callback(data);
+			});
+		});
 	}
 };
 
 Raid1 = {
 	init:function() {
 		Raid.prototype.init.call(this);
+		this.readId=0;
 	},
 	getBlockCount: function() {
 		this.blockCount = this.disks[0].blockCount;
@@ -105,6 +136,12 @@ Raid1 = {
 			var disk = this.children[i];
 			Raid.prototype.write.call(this, disk, data);
 		}
+	},
+	read: function(read_sector, callback) {
+		
+		var disk = this.children[this.readId%this.children.length];
+		Raid.prototype.read.call(this, disk, read_sector, callback);
+		this.readId++;
 	}
 };
 
@@ -121,7 +158,7 @@ Raid0 = {
 		
 		//determinate in which disk to do the writing
 		var disk_count = this.children.length;
-		var disk = this.children[this.writeCounter%disk_count]
+		var disk = this.children[this.writeCounter%disk_count];
 		Raid.prototype.write.call(this, disk, data);
 		this.writeCounter++;
 	}
