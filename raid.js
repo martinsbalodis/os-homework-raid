@@ -3,6 +3,7 @@ window.Disk = function(data) {
 	this.id = data.id;
 	this.blockCount = data.size;
 	this.data = [];
+	this.enabled = true;
 };
 
 window.Disk.prototype = {
@@ -22,6 +23,9 @@ window.Disk.prototype = {
 	read: function(read_sector, callback) {
 		var sector_value = this.data[read_sector];
 		callback(sector_value);
+	},
+	toggle: function() {
+		this.enabled = !this.enabled;
 	}
 };
 
