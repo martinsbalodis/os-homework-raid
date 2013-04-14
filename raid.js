@@ -327,6 +327,32 @@ Raid5 = {
 		
 		// read from
 		var controller = this;
+		var disabledDisks = this.getDisabledDiskCount();
+		if(disabledDisks > 1) {
+			throw new Exception('trying to write to raid 5 when more than 1 disk is disabled');
+		}
+		// write to disks when one disk is disabled
+		if(disabledDisks === 1) {
+			this.readWithRecovery(0, row, function(){
+				if(dataDisk.enabled) {
+					Raid.prototype.write.call(controller, dataDisk, row, data, function() {
+						if(parityDisk.enabled) {
+							Raid.prototype.write.call(controller, parityDisk, row, "p", callback);
+						}
+						else {
+							if(typeof callback === 'function') {
+								callback();
+							}
+						}
+					});
+				}
+				else {
+					Raid.prototype.write.call(controller, parityDisk, row, "p", callback);
+				}
+			});
+			return;
+		}
+		
 		Raid.prototype.read.call(controller, parityDisk, row, function(parity){
 			Raid.prototype.read.call(controller, dataDisk, row, function(originalData){
 				Raid.prototype.write.call(controller, dataDisk, row, data, function(){
