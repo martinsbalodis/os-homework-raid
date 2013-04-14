@@ -337,4 +337,24 @@ Raid5 = {
 		
 		Raid.prototype.read.call(this, dataDisk, row, callback);
 	},
+	// one disk can fail
+	diskTurnedOff: function(disk) {
+		
+		var disks_failed = 0;
+		this.each(function(disk){
+			if(disk.enabled === false) {
+				disks_failed++;
+			}
+		});
+		
+		if(disks_failed > 1) {
+			// clear data on all disks
+			this.each(function(disk){
+				disk.clear();
+			});
+			if(this.enabled) {
+				this.toggle();
+			}
+		}
+	},
 };
