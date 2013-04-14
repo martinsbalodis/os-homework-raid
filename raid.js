@@ -294,14 +294,25 @@ Raid0 = {
 Raid5 = {
 	init:function() {
 		Raid.prototype.init.call(this);
+		this.data = [];
 	},
 	getBlockCount: function() {
 		
 		return this.disks[0].blockCount * this.children.length;
 	},
+	getDisabledDiskCount: function(){
+		var disksDisabled = 0;
+		this.each(function(disk){
+			if(disk.enabled === false) {
+				disksDisabled++;
+			}
+		});
+		return disksDisabled;
+	},
 	write: function(sectorId, data, callback) {
 		
 		// @TODO store data also here
+		this.data[sectorId] = data;
 		
 		//determinate in which disk to do the writing
 		var disk_count = this.children.length;
@@ -335,19 +346,43 @@ Raid5 = {
 		}
 		var dataDisk = this.children[data_col];
 		
+		var disksDisabled = this.getDisabledDiskCount();
+		if(disksDisabled > 1) {
+			throw new Exception('trying to read from raid 5 when more than 1 disk is disabled');
+		}
+		// read from all disks with recovery
+		else if(dataDisk.enabled === false && disksDisabled === 1) {
+			this.readWithRecovery(sectorId, row, callback)
+			return;
+		}
+		
 		Raid.prototype.read.call(this, dataDisk, row, callback);
+	},
+	readWithRecovery: function(sectorId, raid5row, callback) {
+		var cb = (function(disk_count, controller){
+			return function() {
+				if(disk_count > 1) {
+					disk_count--;
+				}
+				else {
+					callback(controller.data[sectorId]);
+				}
+			};
+		})(this.children.length-1, this);
+		
+		// read from all disks at the same time
+		this.each(function(disk){
+			if(disk.enabled) {
+				Raid.prototype.read.call(this, disk, raid5row, cb);
+			}
+		});
 	},
 	// one disk can fail
 	diskTurnedOff: function(disk) {
 		
-		var disks_failed = 0;
-		this.each(function(disk){
-			if(disk.enabled === false) {
-				disks_failed++;
-			}
-		});
+		var disksDisabled = this.getDisabledDiskCount();
 		
-		if(disks_failed > 1) {
+		if(disksDisabled > 1) {
 			// clear data on all disks
 			this.each(function(disk){
 				disk.clear();
