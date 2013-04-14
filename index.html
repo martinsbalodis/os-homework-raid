@@ -8,10 +8,11 @@
 		<script src="raid.js"></script>
 	</head>
 	<body>
-		<input type="text" id="data" value="A" maxLength="1">
+		Sektors: <input type="text" id="write_sector" value="0" maxLength="1">
+		Vērtība: <input type="text" id="data" value="A" maxLength="1">
 		<button id="write">Rakstīt</button>
 		<br>
-		<input type="text" id="read_sector" value="0">
+		Sektors: <input type="text" id="read_sector" value="0">
 		<button id="read">Lasīt sektoru</button>
 		<br>
 	</body>
@@ -24,11 +25,11 @@ root = new Raid({
 	children:[
 		new Disk({
 			id:'disk1',
-			size:10
+			size:3
 		}),
 		new Disk({
 			id:'disk2',
-			size:10
+			size:3
 		}),
 		new Raid({
 			id:'RAID1',
@@ -36,13 +37,16 @@ root = new Raid({
 			children:[
 				new Disk({
 					id:'disk3',
-					size:10
+					size:3
 				}),
 				new Disk({
 					id:'disk4',
-					size:10
+					size:3
 				}),
-
+				new Disk({
+					id:'disk5',
+					size:3
+				}),
 			]
 		})
 	]
@@ -101,7 +105,8 @@ d3.select(self.frameElement).style("height", height + "px");
 
 document.getElementById('write').onclick = function(){
 	var value = document.getElementById('data').value;
-	root.write(value);
+	var write_sector = parseInt(document.getElementById('write_sector').value);
+	root.write(write_sector, value);
 	return false;
 }
 
@@ -113,8 +118,8 @@ document.getElementById('read').onclick = function(){
 	return false;
 }
 
-setTimeout(function(){root.write("A");}, 100);
-setTimeout(function(){root.write("B");}, 600);
-setTimeout(function(){root.write("C");}, 1200);
+setTimeout(function(){root.write(0, "A");}, 100);
+setTimeout(function(){root.write(1, "B");}, 200);
+setTimeout(function(){root.write(2, "C");}, 300);
 
 </script>

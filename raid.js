@@ -2,7 +2,7 @@
 window.Disk = function(data) {
 	this.id = data.id;
 	this.blockCount = data.size;
-	this.data = [];
+	this.data = new Array(data.size);
 	this.enabled = true;
 };
 
@@ -13,11 +13,14 @@ window.Disk.prototype = {
 	getBlockCount: function() {
 		return this.blockCount;
 	},
-	write: function(data) {
-		this.data.push(data);
-		this.text(this.data.join(""));
+	write: function(sectorId, data, callback) {
+		this.data[sectorId] = data;
+		this.text(this.data.join(","));
+		if(typeof callback === 'function') {
+			callback();
+		}
 	},
-	text: function(text) {
+	text: function() {
 		d3.select(this.text_node).text(this.id+" ["+this.data.join("")+"]")
 	},
 	read: function(read_sector, callback) {
@@ -25,18 +28,23 @@ window.Disk.prototype = {
 		callback(sector_value);
 	},
 	toggle: function() {
-		
-		this.enabled = !this.enabled;
+
 		var circle = d3.select(this.el).select('circle');
 		
-		// disabled
-		if(!this.enabled) {
+		// disable disk
+		if(this.enabled) {
+			this.enabled = false;
 			circle.classed("enabled", false).classed("disabled", true);
 			this.parent.diskTurnedOff(this);
+			this.data = [];
+			if(typeof this.text !== 'undefined') {
+				this.text();
+			}
 		}
-		// enabled
+		// enable disk
 		else {
 			circle.classed("enabled", true).classed("disabled", false);
+			this.parent.restoreDisk(this);
 		}
 	}
 };
@@ -86,7 +94,7 @@ window.Raid.prototype = {
 		}
 	},
 	// Animate writing data to disk
-	write: function(disk, data) {
+	write: function(disk, sectorId, data, callback) {
 		
 		var group = d3.select("svg>g");
 		
@@ -101,10 +109,10 @@ window.Raid.prototype = {
 				x: disk.x-8,
 				y: disk.y-8
 			})
-			.duration(500)
+			.duration(100)
 			.delay(100)
 			.each("end", function() {
-				disk.write(data);
+				disk.write(sectorId, data, callback);
 				block.remove();
 			});
 	},
@@ -126,7 +134,7 @@ window.Raid.prototype = {
 				x: me.x-8,
 				y: me.y-8
 			})
-			.duration(500)
+			.duration(100)
 			.delay(100)
 			.each("end", function() {
 				block.remove();
@@ -134,7 +142,16 @@ window.Raid.prototype = {
 			});
 		});
 	},
-	toggle: window.Disk.prototype.toggle
+	toggle: window.Disk.prototype.toggle,
+	// iterate over child disks
+	each: function(fn){
+		for(var i in this.children) {
+			var break_loop = fn.call(this, this.children[i]);
+			if(break_loop === false) {
+				break;
+			}
+		}
+	}
 };
 
 Raid1 = {
@@ -151,18 +168,27 @@ Raid1 = {
 		}
 		return this.blockCount;
 	},
-	write: function(data) {
+	write: function(sectorId, data, callback) {
 		
 		for(var i in this.children) {
 			var disk = this.children[i];
-			Raid.prototype.write.call(this, disk, data);
+			if(disk.enabled) {
+				Raid.prototype.write.call(this, disk, sectorId, data, callback);
+			}
 		}
 	},
 	read: function(read_sector, callback) {
 		
 		var disk = this.children[this.readId%this.children.length];
-		Raid.prototype.read.call(this, disk, read_sector, callback);
 		this.readId++;
+		// read only from an enabled disk
+		if(!disk.enabled) {
+			this.read.call(this, read_sector, callback);
+			return;
+		}
+		
+		Raid.prototype.read.call(this, disk, read_sector, callback);
+		
 	},
 	diskTurnedOff: function(disk) {
 		for(var i in this.children) {
@@ -171,6 +197,39 @@ Raid1 = {
 		}
 		// no valid disks
 		this.toggle();
+	},
+	restoreDisk: function(diskToRestore){
+		
+		// if the controller was disabled then enable it now
+		if(!this.enabled) {
+			diskToRestore.enabled = true;
+			this.toggle();
+		}
+		else {
+			// @TODO refactor
+			var blockCount = this.children[0].blockCount;
+
+			var controller = this;
+			
+			var restore_callback = (function(blockCount, sectorId){
+				return function(){
+					if(sectorId < blockCount) {
+						sectorId++;
+						controller.restoreSector(sectorId, diskToRestore, restore_callback);
+					}
+					else {
+						diskToRestore.enabled=true;
+					}
+				};
+			})(blockCount, 0);
+			this.restoreSector(0, diskToRestore, restore_callback);
+		}
+	},
+	restoreSector: function(sectorId, disk, callback) {
+		var controller = this;
+		controller.read(sectorId, function(data){
+			Raid.prototype.write.call(controller, disk, sectorId, data, callback);
+		});
 	}
 };
 
