@@ -335,6 +335,6 @@ Raid5 = {
 		}
 		var dataDisk = this.children[data_col];
 		
-		Raid.prototype.read.call(this, dataDisk, sectorId, callback);
+		Raid.prototype.read.call(this, dataDisk, row, callback);
 	},
 };
