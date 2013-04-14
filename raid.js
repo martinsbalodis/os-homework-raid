@@ -236,18 +236,22 @@ Raid1 = {
 Raid0 = {
 	init:function() {
 		Raid.prototype.init.call(this);
-		this.writeCounter=0;
 	},
 	getBlockCount: function() {
 		
 		return this.disks[0].blockCount * this.children.length;
 	},
-	write: function(data) {
+	write: function(sectorId, data, callback) {
 		
 		//determinate in which disk to do the writing
 		var disk_count = this.children.length;
-		var disk = this.children[this.writeCounter%disk_count];
-		Raid.prototype.write.call(this, disk, data);
-		this.writeCounter++;
-	}
+		var disk = this.children[sectorId%disk_count];
+		Raid.prototype.write.call(this, disk, sectorId, data, callback);
+	},
+	read: function(sectorId, callback) {
+		
+		var disk_count = this.children.length;
+		var disk = this.children[sectorId%disk_count];
+		Raid.prototype.read.call(this, disk, sectorId, callback);
+	},
 };
