@@ -106,10 +106,54 @@ window.raid5 = new Raid({
 	]
 });
 
-window.root = window.raid5;
+window.crazyRaid = new Raid({
+	id:'RAID5',
+	type:'R5',
+	children:[
+		new Disk({
+			id:'disk1',
+			size:3
+		}),
+		new Raid({
+			id:'RAID0',
+			type:'R0',
+			children:[
+				new Disk({
+					id:'disk1',
+					size:3
+				}),
+				new Disk({
+					id:'disk2',
+					size:3
+				}),
+				new Disk({
+					id:'disk3',
+					size:3
+				}),
+			]
+		}),
+		new Raid({
+			id:'RAID1',
+			type:'R1',
+			children:[
+				new Disk({
+					id:'disk1',
+					size:3
+				}),
+				new Disk({
+					id:'disk2',
+					size:3
+				}),
+			]
+		})
+	]
+});
 
-var width = 500,
-    height = 500;
+
+window.root = window.crazyRaid;
+
+var width = 700,
+    height = 700;
 
 var cluster = d3.layout.cluster()
     .size([height, width - 160]);
@@ -148,7 +192,7 @@ node.append("circle")
 	});
 
 node.append("text")
-	.attr("dx", function(d) { return d.children ? -8 : 8; })
+	.attr("dx", function(d) { return d.children ? -12 : 12; })
 	.attr("dy", 3)
 	.style("text-anchor", function(d) { return d.children ? "end" : "start"; })
 	.text(function(d) { 
@@ -177,5 +221,8 @@ document.getElementById('read').onclick = function(){
 setTimeout(function(){root.write(0, "A");}, 100);
 setTimeout(function(){root.write(1, "B");}, 200);
 setTimeout(function(){root.write(2, "C");}, 300);
+setTimeout(function(){root.write(3, "D");}, 400);
+setTimeout(function(){root.write(4, "E");}, 500);
+setTimeout(function(){root.write(5, "F");}, 600);
 
 </script>

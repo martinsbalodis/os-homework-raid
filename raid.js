@@ -435,6 +435,7 @@ Raid5 = {
 			var controller = this;
 			
 			// FML
+			// @TODO no animation for data retrieval
 			var data = diskToRestore.dataBeforeClear;
 			for(var sectorId in data) {
 				var value = data[sectorId];
