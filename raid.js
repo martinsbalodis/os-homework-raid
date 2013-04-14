@@ -25,7 +25,19 @@ window.Disk.prototype = {
 		callback(sector_value);
 	},
 	toggle: function() {
+		
 		this.enabled = !this.enabled;
+		var circle = d3.select(this.el).select('circle');
+		
+		// disabled
+		if(!this.enabled) {
+			circle.classed("enabled", false).classed("disabled", true);
+			this.parent.diskTurnedOff(this);
+		}
+		// enabled
+		else {
+			circle.classed("enabled", true).classed("disabled", false);
+		}
 	}
 };
 
@@ -33,6 +45,7 @@ window.Raid = function(data) {
 	this.type = data.type
 	this.id = data.id;
 	this.children = data.children;
+	this.enabled = true;
 	this.loadRaid();
 	this.init();
 }
@@ -50,7 +63,10 @@ window.Raid.prototype = {
 		this.disks = disks;
 	},
 	init:function(){
-		
+		for(var i in this.children) {
+			var disk = this.children[i]
+			disk.parent = this;
+		}
 	},
 	getBlockCount: function() {
 		return this.blockCount;
@@ -117,7 +133,8 @@ window.Raid.prototype = {
 				callback(data);
 			});
 		});
-	}
+	},
+	toggle: window.Disk.prototype.toggle
 };
 
 Raid1 = {
@@ -146,6 +163,14 @@ Raid1 = {
 		var disk = this.children[this.readId%this.children.length];
 		Raid.prototype.read.call(this, disk, read_sector, callback);
 		this.readId++;
+	},
+	diskTurnedOff: function(disk) {
+		for(var i in this.children) {
+			var disk = this.children[i];
+			if(disk.enabled) return;
+		}
+		// no valid disks
+		this.toggle();
 	}
 };
 

@@ -85,15 +85,6 @@ node.append("circle")
 	.attr("r", 10)
 	.on("click", function(d,i) { 
 		d.toggle();
-		console.log(d3.select(this));
-		if(d.enabled) {
-			d3.select(this).classed("enabled", true);
-			d3.select(this).classed("disabled", false);
-		}
-		else {
-			d3.select(this).classed("enabled", false);
-			d3.select(this).classed("disabled", true);
-		}
 	});
 
 node.append("text")
