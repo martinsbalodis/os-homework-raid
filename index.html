@@ -19,7 +19,7 @@
 </html>
 <script>
 
-root = new Raid({
+window.root = new Raid({
 	id:'RAID1',
 	type:'R1',
 	children:[
@@ -51,6 +51,43 @@ root = new Raid({
 		})
 	]
 });
+
+window.raid10 = new Raid({
+	id:'RAID0',
+	type:'R0',
+	children:[
+		new Raid({
+			id:'RAID1',
+			type:'R1',
+			children:[
+				new Disk({
+					id:'disk1',
+					size:3
+				}),
+				new Disk({
+					id:'disk2',
+					size:3
+				}),
+			]
+		}),
+		new Raid({
+			id:'RAID1',
+			type:'R1',
+			children:[
+				new Disk({
+					id:'disk3',
+					size:3
+				}),
+				new Disk({
+					id:'disk4',
+					size:3
+				}),
+			]
+		})
+	]
+})
+
+window.root = window.raid10;
 
 var width = 500,
     height = 500;
