@@ -151,6 +151,12 @@ window.Raid.prototype = {
 				break;
 			}
 		}
+	},
+	restoreSector: function(sectorId, disk, callback) {
+		var controller = this;
+		controller.read(sectorId, function(data){
+			Raid.prototype.write.call(controller, disk, sectorId, data, callback);
+		});
 	}
 };
 
@@ -224,12 +230,6 @@ Raid1 = {
 			})(blockCount, 0);
 			this.restoreSector(0, diskToRestore, restore_callback);
 		}
-	},
-	restoreSector: function(sectorId, disk, callback) {
-		var controller = this;
-		controller.read(sectorId, function(data){
-			Raid.prototype.write.call(controller, disk, sectorId, data, callback);
-		});
 	}
 };
 
@@ -254,4 +254,30 @@ Raid0 = {
 		var disk = this.children[sectorId%disk_count];
 		Raid.prototype.read.call(this, disk, sectorId, callback);
 	},
+	// if one this fails thon whole array fails
+	diskTurnedOff: function(disk) {
+		
+		// clear data on all disks
+		this.each(function(disk){
+			disk.data = [];
+			disk.text();
+		});
+		
+		if(this.enabled) {
+			this.toggle();
+		}
+	},
+	restoreDisk: function(diskToRestore){
+		
+		diskToRestore.enabled = true;
+		
+		// if all disks are working then raid can work again
+		for(var i in this.children) {
+			var disk = this.children[i]
+			if(disk.enabled === false) return;
+		}
+		
+		// restora data to disks
+		this.toggle();
+	}
 };
