@@ -213,7 +213,7 @@ Raid1 = {
 			
 			var restore_callback = (function(blockCount, sectorId){
 				return function(){
-					if(sectorId < blockCount) {
+					if(sectorId+1 < blockCount) {
 						sectorId++;
 						controller.restoreSector(sectorId, diskToRestore, restore_callback);
 					}
