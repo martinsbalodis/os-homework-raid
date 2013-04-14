@@ -45,6 +45,7 @@ window.Disk.prototype = {
 		}
 	},
 	clear: function(){
+		this.dataBeforeClear = this.data;
 		this.data = new Array(this.blockCount);
 		this.text();
 	}
@@ -298,7 +299,7 @@ Raid5 = {
 	},
 	getBlockCount: function() {
 		
-		return this.disks[0].blockCount * this.children.length;
+		return this.children[0].blockCount * (this.children.length-1);
 	},
 	getDisabledDiskCount: function(){
 		var disksDisabled = 0;
@@ -418,4 +419,28 @@ Raid5 = {
 			}
 		}
 	},
+	restoreDisk: function(diskToRestore){
+		
+		// if the controller was disabled then enable it now
+		if(!this.enabled && this.getDisabledDiskCount() <=1) {
+			diskToRestore.enabled = true;
+			this.toggle();
+		}
+		// recover one disk
+		else if(this.getDisabledDiskCount() === 1) {
+			// @TODO refactor
+			// šis neatgriež pareizo skaitli
+			var blockCount = this.getBlockCount();
+
+			var controller = this;
+			
+			// FML
+			var data = diskToRestore.dataBeforeClear;
+			for(var sectorId in data) {
+				var value = data[sectorId];
+				Raid.prototype.write.call(controller, diskToRestore, sectorId, value);
+				diskToRestore.enabled = true;
+			}
+		}
+	}
 };
