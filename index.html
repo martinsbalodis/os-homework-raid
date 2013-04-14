@@ -87,7 +87,26 @@ window.raid10 = new Raid({
 	]
 })
 
-window.root = window.raid10;
+window.raid5 = new Raid({
+	id:'RAID5',
+	type:'R5',
+	children:[
+		new Disk({
+			id:'disk1',
+			size:3
+		}),
+		new Disk({
+			id:'disk2',
+			size:3
+		}),
+		new Disk({
+			id:'disk3',
+			size:3
+		}),
+	]
+});
+
+window.root = window.raid5;
 
 var width = 500,
     height = 500;

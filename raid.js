@@ -89,6 +89,9 @@ window.Raid.prototype = {
 			case 'R1':
 				var functions = Raid1;
 				break;
+			case 'R5':
+				var functions = Raid5;
+				break;
 		}
 		for(var fn in functions) {
 			this[fn] = functions[fn];
@@ -286,4 +289,52 @@ Raid0 = {
 		// restora data to disks
 		this.toggle();
 	}
+};
+
+Raid5 = {
+	init:function() {
+		Raid.prototype.init.call(this);
+	},
+	getBlockCount: function() {
+		
+		return this.disks[0].blockCount * this.children.length;
+	},
+	write: function(sectorId, data, callback) {
+		
+		// @TODO store data also here
+		
+		//determinate in which disk to do the writing
+		var disk_count = this.children.length;
+		var row = Math.floor((sectorId)/(disk_count-1));
+		var parity_col = row % disk_count;
+		var data_col = sectorId%(disk_count-1);
+		if(data_col >= parity_col) {
+			data_col++;
+		}
+		var parityDisk = this.children[parity_col];
+		var dataDisk = this.children[data_col];
+		
+		// read from
+		var controller = this;
+		Raid.prototype.read.call(controller, parityDisk, row, function(parity){
+			Raid.prototype.read.call(controller, dataDisk, row, function(originalData){
+				Raid.prototype.write.call(controller, dataDisk, row, data, function(){
+					Raid.prototype.write.call(controller, parityDisk, row, "p", callback);
+				});
+			});
+		});
+	},
+	read: function(sectorId, callback) {
+		
+		var disk_count = this.children.length;
+		var row = Math.floor((sectorId)/(disk_count-1));
+		var parity_col = row % disk_count;
+		var data_col = sectorId%(disk_count-1);
+		if(data_col >= parity_col) {
+			data_col++;
+		}
+		var dataDisk = this.children[data_col];
+		
+		Raid.prototype.read.call(this, dataDisk, sectorId, callback);
+	},
 };
