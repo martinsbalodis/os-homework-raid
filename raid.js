@@ -36,16 +36,17 @@ window.Disk.prototype = {
 			this.enabled = false;
 			circle.classed("enabled", false).classed("disabled", true);
 			this.parent.diskTurnedOff(this);
-			this.data = [];
-			if(typeof this.text !== 'undefined') {
-				this.text();
-			}
+			this.clear();
 		}
 		// enable disk
 		else {
 			circle.classed("enabled", true).classed("disabled", false);
 			this.parent.restoreDisk(this);
 		}
+	},
+	clear: function(){
+		this.data = new Array(this.blockCount);
+		this.text();
 	}
 };
 
@@ -157,6 +158,12 @@ window.Raid.prototype = {
 		controller.read(sectorId, function(data){
 			Raid.prototype.write.call(controller, disk, sectorId, data, callback);
 		});
+	},
+	// clear disk data
+	clear: function(){
+		this.each(function(disk){
+			disk.clear();
+		});
 	}
 };
 
@@ -259,8 +266,7 @@ Raid0 = {
 		
 		// clear data on all disks
 		this.each(function(disk){
-			disk.data = [];
-			disk.text();
+			disk.clear();
 		});
 		
 		if(this.enabled) {
