@@ -14,9 +14,9 @@
 		<br>
 		Sektors: <input type="text" id="read_sector" value="0">
 		<button id="read">Lasīt sektoru</button>
+		Rezultāts: <input type="text" id="read_sector_value">
 		<br>
 		Piemērs: <select id="raid_example">
-			<option value="raid01">raid01</option>
 			<option value="raid1">raid1</option>
 			<option value="raid0">raid0</option>
 			<option value="raid5">raid5</option>
@@ -182,7 +182,10 @@ document.getElementById('write').onclick = function(){
 document.getElementById('read').onclick = function(){
 	var read_sector = parseInt(document.getElementById('read_sector').value);
 	root.read(read_sector, function(data){
-		console.log(data);
+		document.getElementById('read_sector_value').value = data;
+		setTimeout(function(){
+			document.getElementById('read_sector_value').value = '';
+		}, 1000);
 	});
 	return false;
 }
