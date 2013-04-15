@@ -220,7 +220,7 @@ Raid1 = {
 		this.readId++;
 		// read only from an enabled disk
 		if(!disk.enabled) {
-			this.read.call(this, read_sector, callback);
+			this.read(read_sector, callback);
 			return;
 		}
 		
@@ -243,23 +243,27 @@ Raid1 = {
 			this.toggle();
 		}
 		else {
-			// @TODO refactor
-			var blockCount = this.children[0].blockCount;
+			
+			var blockCount = this.getBlockCount();
 
 			var controller = this;
 			
-			var restore_callback = (function(blockCount, sectorId){
-				return function(){
-					if(sectorId+1 < blockCount) {
+			var recoveryFn = function(controller, diskToRestore, sectorId) {
+				controller.read(sectorId, function(data){
+					Raid.prototype.write.call(controller, diskToRestore, sectorId, data, function(){
 						sectorId++;
-						controller.restoreSector(sectorId, diskToRestore, restore_callback);
-					}
-					else {
-						diskToRestore.enabled=true;
-					}
-				};
-			})(blockCount, 0);
-			this.restoreSector(0, diskToRestore, restore_callback);
+						blockCount = controller.getBlockCount();
+						if(blockCount>sectorId) {
+							recoveryFn(controller, diskToRestore, sectorId);
+						}
+						else {
+							diskToRestore.enabled=true;
+						}
+					});
+				});
+			}
+			
+			recoveryFn(controller, diskToRestore, 0);
 		}
 	}
 };
@@ -277,13 +281,15 @@ Raid0 = {
 		//determinate in which disk to do the writing
 		var disk_count = this.children.length;
 		var disk = this.children[sectorId%disk_count];
-		Raid.prototype.write.call(this, disk, sectorId, data, callback);
+		var raid0SectorId = Math.floor(sectorId/disk_count)+(sectorId%disk_count);
+		Raid.prototype.write.call(this, disk, raid0SectorId, data, callback);
 	},
 	read: function(sectorId, callback) {
 		
 		var disk_count = this.children.length;
 		var disk = this.children[sectorId%disk_count];
-		Raid.prototype.read.call(this, disk, sectorId, callback);
+		var raid0SectorId = Math.floor(sectorId/disk_count)+(sectorId%disk_count);
+		Raid.prototype.read.call(this, disk, raid0SectorId, callback);
 	},
 	// if one this fails thon whole array fails
 	diskTurnedOff: function(disk) {
@@ -352,7 +358,6 @@ Raid5 = {
 				parityDiskSectorId: row
 			};
 		}
-		console.log(this.sectors);
 	},
 	write: function(sectorId, data, callback) {
 		
@@ -473,7 +478,7 @@ Raid5 = {
 			
 			var restoreFNn = function(controller, diskToRestore, sectorId){
 				if(typeof controller.sectors[sectorId] === 'undefined') {
-					//diskToRestore.enabled = true;
+					diskToRestore.enabled = true;
 					return;
 				}
 				if(controller.sectors[sectorId].dataDisk === diskToRestore) {
