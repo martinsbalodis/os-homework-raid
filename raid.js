@@ -270,7 +270,7 @@ Raid0 = {
 	},
 	getBlockCount: function() {
 		
-		return this.children[0].blockCount * this.children.length;
+		return this.getMinDiskBlockCount()* this.children.length;
 	},
 	write: function(sectorId, data, callback) {
 		
