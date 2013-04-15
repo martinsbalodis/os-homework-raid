@@ -15,98 +15,118 @@
 		Sektors: <input type="text" id="read_sector" value="0">
 		<button id="read">Lasīt sektoru</button>
 		<br>
+		Piemērs: <select id="raid_example">
+			<option value="raid1">raid1</option>
+			<option value="raid0">raid0</option>
+			<option value="raid5">raid5</option>
+			<option value="raid01">raid01</option>
+			<option value="mixed">mixed</option>
+		</select>
+		<br>
 	</body>
 </html>
 <script>
 
-//window.root = new Raid({
-//	id:'RAID1',
-//	type:'R1',
-//	children:[
-//		new Disk({
-//			id:'disk1',
-//			size:3
-//		}),
-//		new Disk({
-//			id:'disk2',
-//			size:3
-//		}),
-//		new Raid({
-//			id:'RAID1',
-//			type:'R0',
-//			children:[
-//				new Disk({
-//					id:'disk3',
-//					size:3
-//				}),
-//				new Disk({
-//					id:'disk4',
-//					size:3
-//				}),
-//				new Disk({
-//					id:'disk5',
-//					size:3
-//				}),
-//			]
-//		})
-//	]
-//});
+window.raid1 = new Raid({
+	id:'RAID1',
+	type:'R1',
+	children:[
+		new Disk({
+			id:'disk1',
+			size:6
+		}),
+		new Disk({
+			id:'disk2',
+			size:6
+		})
+	]
+});
 
-//window.raid10 = new Raid({
-//	id:'RAID0',
-//	type:'R0',
-//	children:[
-//		new Raid({
-//			id:'RAID1',
-//			type:'R1',
-//			children:[
-//				new Disk({
-//					id:'disk1',
-//					size:3
-//				}),
-//				new Disk({
-//					id:'disk2',
-//					size:3
-//				}),
-//			]
-//		}),
-//		new Raid({
-//			id:'RAID1',
-//			type:'R1',
-//			children:[
-//				new Disk({
-//					id:'disk3',
-//					size:3
-//				}),
-//				new Disk({
-//					id:'disk4',
-//					size:3
-//				}),
-//			]
-//		})
-//	]
-//})
+window.initraid1 = function(){
+	setTimeout(function(){root.write(0, "A");}, 100);
+	setTimeout(function(){root.write(1, "B");}, 200);
+	setTimeout(function(){root.write(2, "C");}, 300);
+	setTimeout(function(){root.write(3, "D");}, 400);
+	setTimeout(function(){root.write(4, "E");}, 500);
+	setTimeout(function(){root.write(5, "F");}, 600);
+};
 
-//window.raid5 = new Raid({
-//	id:'RAID5',
-//	type:'R5',
-//	children:[
-//		new Disk({
-//			id:'disk1',
-//			size:3
-//		}),
-//		new Disk({
-//			id:'disk2',
-//			size:3
-//		}),
-//		new Disk({
-//			id:'disk3',
-//			size:3
-//		}),
-//	]
-//});
+window.raid0 = new Raid({
+	id:'RAID0',
+	type:'R0',
+	children:[
+		new Disk({
+			id:'disk1',
+			size:3
+		}),
+		new Disk({
+			id:'disk2',
+			size:3
+		})
+	]
+});
 
-window.crazyRaid = new Raid({
+window.initraid0 = window.initraid1;
+
+window.raid01 = new Raid({
+	id:'RAID0',
+	type:'R0',
+	children:[
+		new Raid({
+			id:'RAID1',
+			type:'R1',
+			children:[
+				new Disk({
+					id:'disk1',
+					size:3
+				}),
+				new Disk({
+					id:'disk2',
+					size:3
+				}),
+			]
+		}),
+		new Raid({
+			id:'RAID1',
+			type:'R1',
+			children:[
+				new Disk({
+					id:'disk3',
+					size:3
+				}),
+				new Disk({
+					id:'disk4',
+					size:3
+				}),
+			]
+		})
+	]
+});
+
+window.initraid01 = window.initraid1;
+
+window.raid5 = new Raid({
+	id:'RAID5',
+	type:'R5',
+	children:[
+		new Disk({
+			id:'disk1',
+			size:3
+		}),
+		new Disk({
+			id:'disk2',
+			size:3
+		}),
+		new Disk({
+			id:'disk3',
+			size:3
+		}),
+	]
+});
+
+window.initraid5 = window.initraid1;
+
+window.mixed = new Raid({
 	id:'RAID5',
 	type:'R5',
 	children:[
@@ -149,9 +169,32 @@ window.crazyRaid = new Raid({
 	]
 });
 
+window.initmixed = window.initraid1;
 
-window.root = window.crazyRaid;
+document.getElementById('write').onclick = function(){
+	var value = document.getElementById('data').value;
+	var write_sector = parseInt(document.getElementById('write_sector').value);
+	root.write(write_sector, value);
+	return false;
+}
 
+document.getElementById('read').onclick = function(){
+	var read_sector = parseInt(document.getElementById('read_sector').value);
+	root.read(read_sector, function(data){
+		console.log(data);
+	});
+	return false;
+}
+
+document.getElementById('raid_example').onchange = function() {
+	var example_id = document.getElementById('raid_example').value;
+	var svg = document.getElementsByTagName('svg');
+	if(svg.length) {
+		svg[0].remove()
+	}
+	
+	window.root = window[example_id];
+	
 var width = 700,
     height = 700;
 
@@ -199,30 +242,10 @@ node.append("text")
 		d.text_node = this;
 		return d.text(); 
 	});
-
-
-d3.select(self.frameElement).style("height", height + "px");
-
-document.getElementById('write').onclick = function(){
-	var value = document.getElementById('data').value;
-	var write_sector = parseInt(document.getElementById('write_sector').value);
-	root.write(write_sector, value);
-	return false;
+	
+	window['init'+example_id]();
+	
 }
-
-document.getElementById('read').onclick = function(){
-	var read_sector = parseInt(document.getElementById('read_sector').value);
-	root.read(read_sector, function(data){
-		console.log(data);
-	});
-	return false;
-}
-
-setTimeout(function(){root.write(0, "A");}, 100);
-setTimeout(function(){root.write(1, "B");}, 200);
-setTimeout(function(){root.write(2, "C");}, 300);
-setTimeout(function(){root.write(3, "D");}, 400);
-setTimeout(function(){root.write(4, "E");}, 500);
-setTimeout(function(){root.write(5, "F");}, 600);
+document.getElementById('raid_example').onchange();
 
 </script>

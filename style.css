@@ -23,7 +23,7 @@ circle.disabled {
 	fill: #fdd;
 }
 
-input[type=text], button {
+input[type=text], button, select {
 	border:1px gray solid;
 	padding:2px;
 }
