@@ -19,92 +19,92 @@
 </html>
 <script>
 
-window.root = new Raid({
-	id:'RAID1',
-	type:'R1',
-	children:[
-		new Disk({
-			id:'disk1',
-			size:3
-		}),
-		new Disk({
-			id:'disk2',
-			size:3
-		}),
-		new Raid({
-			id:'RAID1',
-			type:'R0',
-			children:[
-				new Disk({
-					id:'disk3',
-					size:3
-				}),
-				new Disk({
-					id:'disk4',
-					size:3
-				}),
-				new Disk({
-					id:'disk5',
-					size:3
-				}),
-			]
-		})
-	]
-});
+//window.root = new Raid({
+//	id:'RAID1',
+//	type:'R1',
+//	children:[
+//		new Disk({
+//			id:'disk1',
+//			size:3
+//		}),
+//		new Disk({
+//			id:'disk2',
+//			size:3
+//		}),
+//		new Raid({
+//			id:'RAID1',
+//			type:'R0',
+//			children:[
+//				new Disk({
+//					id:'disk3',
+//					size:3
+//				}),
+//				new Disk({
+//					id:'disk4',
+//					size:3
+//				}),
+//				new Disk({
+//					id:'disk5',
+//					size:3
+//				}),
+//			]
+//		})
+//	]
+//});
 
-window.raid10 = new Raid({
-	id:'RAID0',
-	type:'R0',
-	children:[
-		new Raid({
-			id:'RAID1',
-			type:'R1',
-			children:[
-				new Disk({
-					id:'disk1',
-					size:3
-				}),
-				new Disk({
-					id:'disk2',
-					size:3
-				}),
-			]
-		}),
-		new Raid({
-			id:'RAID1',
-			type:'R1',
-			children:[
-				new Disk({
-					id:'disk3',
-					size:3
-				}),
-				new Disk({
-					id:'disk4',
-					size:3
-				}),
-			]
-		})
-	]
-})
+//window.raid10 = new Raid({
+//	id:'RAID0',
+//	type:'R0',
+//	children:[
+//		new Raid({
+//			id:'RAID1',
+//			type:'R1',
+//			children:[
+//				new Disk({
+//					id:'disk1',
+//					size:3
+//				}),
+//				new Disk({
+//					id:'disk2',
+//					size:3
+//				}),
+//			]
+//		}),
+//		new Raid({
+//			id:'RAID1',
+//			type:'R1',
+//			children:[
+//				new Disk({
+//					id:'disk3',
+//					size:3
+//				}),
+//				new Disk({
+//					id:'disk4',
+//					size:3
+//				}),
+//			]
+//		})
+//	]
+//})
 
-window.raid5 = new Raid({
-	id:'RAID5',
-	type:'R5',
-	children:[
-		new Disk({
-			id:'disk1',
-			size:3
-		}),
-		new Disk({
-			id:'disk2',
-			size:3
-		}),
-		new Disk({
-			id:'disk3',
-			size:3
-		}),
-	]
-});
+//window.raid5 = new Raid({
+//	id:'RAID5',
+//	type:'R5',
+//	children:[
+//		new Disk({
+//			id:'disk1',
+//			size:3
+//		}),
+//		new Disk({
+//			id:'disk2',
+//			size:3
+//		}),
+//		new Disk({
+//			id:'disk3',
+//			size:3
+//		}),
+//	]
+//});
 
 window.crazyRaid = new Raid({
 	id:'RAID5',
@@ -119,15 +119,15 @@ window.crazyRaid = new Raid({
 			type:'R0',
 			children:[
 				new Disk({
-					id:'disk1',
+					id:'A',
 					size:3
 				}),
 				new Disk({
-					id:'disk2',
+					id:'B',
 					size:3
 				}),
 				new Disk({
-					id:'disk3',
+					id:'C',
 					size:3
 				}),
 			]
@@ -197,7 +197,7 @@ node.append("text")
 	.style("text-anchor", function(d) { return d.children ? "end" : "start"; })
 	.text(function(d) { 
 		d.text_node = this;
-		return d.id; 
+		return d.text(); 
 	});
 
 

@@ -21,7 +21,9 @@ window.Disk.prototype = {
 		}
 	},
 	text: function() {
-		d3.select(this.text_node).text(this.id+" ["+this.data.join("")+"]")
+		var text = this.id+" ["+this.data.join("")+"]";
+		d3.select(this.text_node).text(text);
+		return text;
 	},
 	read: function(read_sector, callback) {
 		var sector_value = this.data[read_sector];
@@ -77,9 +79,24 @@ window.Raid.prototype = {
 			var disk = this.children[i]
 			disk.parent = this;
 		}
+		this.data = [];
+	},
+	text: function() {
+		var text = this.id+" ["+this.getBlockCount()+"]";
+		d3.select(this.text_node).text(text);
+		return text;
 	},
 	getBlockCount: function() {
 		return this.blockCount;
+	},
+	getMinDiskBlockCount: function() {
+		var minBlockCount = this.children[0].getBlockCount();
+		this.each(function(disk){
+			if(disk.getBlockCount() < minBlockCount) {
+				minBlockCount = disk.getBlockCount();
+			}
+		});
+		return minBlockCount;
 	},
 	// loads raid function stack
 	loadRaid: function(){
@@ -100,6 +117,8 @@ window.Raid.prototype = {
 	},
 	// Animate writing data to disk
 	write: function(disk, sectorId, data, callback) {
+		
+		//this.data[sectorId] = data;
 		
 		var group = d3.select("svg>g");
 		
@@ -165,6 +184,7 @@ window.Raid.prototype = {
 	},
 	// clear disk data
 	clear: function(){
+		this.dataBeforeClear = this.data;
 		this.each(function(disk){
 			disk.clear();
 		});
@@ -177,10 +197,10 @@ Raid1 = {
 		this.readId=0;
 	},
 	getBlockCount: function() {
-		this.blockCount = this.disks[0].blockCount;
-		for(var i in this.disks) {
-			if(this.blockCount > this.disks[i].blockCount) {
-				this.blockCount = this.disks[i].blockCount;
+		this.blockCount = this.children[0].blockCount;
+		for(var i in this.children) {
+			if(this.blockCount > this.children[i].blockCount) {
+				this.blockCount = this.children[i].blockCount;
 			}
 		}
 		return this.blockCount;
@@ -250,7 +270,7 @@ Raid0 = {
 	},
 	getBlockCount: function() {
 		
-		return this.disks[0].blockCount * this.children.length;
+		return this.children[0].blockCount * this.children.length;
 	},
 	write: function(sectorId, data, callback) {
 		
@@ -295,11 +315,11 @@ Raid0 = {
 Raid5 = {
 	init:function() {
 		Raid.prototype.init.call(this);
-		this.data = [];
+		this.initSectors();
 	},
 	getBlockCount: function() {
 		
-		return this.children[0].blockCount * (this.children.length-1);
+		return this.getMinDiskBlockCount() * (this.children.length-1);
 	},
 	getDisabledDiskCount: function(){
 		var disksDisabled = 0;
@@ -310,9 +330,32 @@ Raid5 = {
 		});
 		return disksDisabled;
 	},
+	initSectors: function() {
+		
+		var blockCount = this.getBlockCount();
+		var diskCount = this.children.length;
+		this.sectors = {};
+		for(var sectorId=0;sectorId<blockCount;sectorId++) {
+			
+			var row = Math.floor((sectorId)/(diskCount-1));
+			var parity_col = row % diskCount;
+			var data_col = sectorId%(diskCount-1);
+			if(data_col >= parity_col) {
+				data_col++;
+			}
+			var parityDisk = this.children[parity_col];
+			var dataDisk = this.children[data_col];
+			this.sectors[sectorId] = {
+				parityDisk: parityDisk,
+				dataDisk: dataDisk,
+				dataDiskSectorId: row,
+				parityDiskSectorId: row
+			};
+		}
+		console.log(this.sectors);
+	},
 	write: function(sectorId, data, callback) {
 		
-		// @TODO store data also here
 		this.data[sectorId] = data;
 		
 		//determinate in which disk to do the writing
@@ -420,7 +463,6 @@ Raid5 = {
 		}
 	},
 	restoreDisk: function(diskToRestore){
-		
 		// if the controller was disabled then enable it now
 		if(!this.enabled && this.getDisabledDiskCount() <=1) {
 			diskToRestore.enabled = true;
@@ -428,20 +470,36 @@ Raid5 = {
 		}
 		// recover one disk
 		else if(this.getDisabledDiskCount() === 1) {
-			// @TODO refactor
-			// šis neatgriež pareizo skaitli
-			var blockCount = this.getBlockCount();
-
-			var controller = this;
 			
-			// FML
-			// @TODO no animation for data retrieval
-			var data = diskToRestore.dataBeforeClear;
-			for(var sectorId in data) {
-				var value = data[sectorId];
-				Raid.prototype.write.call(controller, diskToRestore, sectorId, value);
-				diskToRestore.enabled = true;
-			}
+			var restoreFNn = function(controller, diskToRestore, sectorId){
+				if(typeof controller.sectors[sectorId] === 'undefined') {
+					//diskToRestore.enabled = true;
+					return;
+				}
+				if(controller.sectors[sectorId].dataDisk === diskToRestore) {
+					controller.read(sectorId, function(data){
+						var diskSector = controller.sectors[sectorId]['dataDiskSectorId']
+						Raid.prototype.write.call(controller, diskToRestore, diskSector, data, function(){
+							sectorId++;
+							restoreFNn(controller, diskToRestore, sectorId);
+						});
+					});
+				}
+				else if(controller.sectors[sectorId].parityDisk === diskToRestore) {
+					
+					var diskSector = controller.sectors[sectorId]['parityDiskSectorId']
+					Raid.prototype.write.call(controller, diskToRestore, diskSector, 'p', function(){
+						sectorId++;
+						restoreFNn(controller, diskToRestore, sectorId);
+					});
+				}
+				else {
+					sectorId++;
+					restoreFNn(controller, diskToRestore, sectorId);
+				}
+			};
+			
+			restoreFNn(this, diskToRestore, 0);
 		}
 	}
 };
